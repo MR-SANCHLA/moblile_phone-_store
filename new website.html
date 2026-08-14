@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>dhara ledis tailor</title>
+    <style>
+        *{
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+        body{
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg,#06ceed,#203a43,#2c5364);
+            overflow: hidden;
+        }
+        /*animated background*/
+        body::before{
+            content: "";
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            background: #00d4f;
+            border-rediuns:50%;
+            filter:blue(120px);
+            animation:move 18s infinite alternate;
+        }
+        body::after{
+            content: "";
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            background: #960777;
+            border-radius: 50%;
+            filter: blur(120px);
+            animation: move2 8s infinite alternate;            
+        }
+        @keyframes move1{
+            from{transform: translate(-250px,-150px);}
+            to{transform: translate(250px,150px);}
+        @keyframes move2 {
+            from{transform:translate(250px,150px)}
+            form{transform: translate(-250px,150px);}
+        }
+        }
+        /*glass card*/
+        .login-box{
+            position: relative;
+            width: 350px;
+            padding: 40px;
+            background: rgba(255, 255, 255, 1);
+            background: blue(250px);
+            border-radius: 20px;
+            box-shadow: 0 25px 45px rgba(0, 0, 0, 4);
+            transform-style: preserve-3d;
+            transition: 5s;
+        }
+        .login-box:haver{
+            transform: rotate Y(10deg) rotate X(10deg);
+        }
+        h2{
+            color: #fff;
+            text-align: center;
+            margin-bottom: 25px;
+        }
+        .input-box{
+            margin-bottom:18px ;
+        }
+        .input-box input{
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 10px;
+            outline: none;
+            font-size: 16px;
+        }botton{
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 10px;
+            background: #00d4dd;
+            color: #000;
+            font-size: 18px;
+            cursor: pointer;
+            transition: 3s;
+        }
+        button:hover{
+            background:#0abac7;
+            transform: scale(1.05);
+        }
+        p{
+            color: #fff;
+            text-align: center;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body
+
+    <div class ="login-box">
+        <h2>dhara ledis tailor</h2>
+        <div clas ="input-box">
+            <input type ="text" id="user" placeholder="username">
+        </div>
+        <div class="input-box">
+            <input type="passweord" id=""pass placeholder="password">
+            </div>
+            <button onclick="login()">login</button>
+            <p id="msg"></p>
+            </div>
+    <script>
+        function login(){
+            let user=document.ger Element byld("user").vlue;
+            let pass=document.get Element byld("pass").value;
+            if(user==="admin"&&pass==="1234"){
+                document.get Element byld("msg").inner HTML="login succeful!";
+                document.getElementById("msg").style.color="#00ff99";
+            }
+            else{
+                document.getElementById("msg").innerHTML="invalid username of password";
+                document.getElementById("msg").style.color="#ff4d4d";
+            }
+        }
+    </script>
+</body>
+</html>

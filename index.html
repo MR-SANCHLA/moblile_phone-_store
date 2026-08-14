@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slow Roads</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="game-panel">
+    <div class="hud">
+      <div>Score: <span id="score">0</span></div>
+      <div>Best: <span id="best">0</span></div>
+    </div>
+
+    <canvas id="gameCanvas" width="360" height="620" aria-label="Slow Roads game"></canvas>
+
+    <div class="controls">
+      <button id="leftBtn" aria-label="Move left">◀</button>
+      <button id="rightBtn" aria-label="Move right">▶</button>
+    </div>
+
+    <div id="gameOver" class="hidden">
+      <h2>Crash!</h2>
+      <p>Press restart to drive again.</p>
+      <button id="restartBtn">Restart</button>
+    </div>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const scoreEl = document.getElementById('score');
+    const bestEl = document.getElementById('best');
+    const gameOverEl = document.getElementById('gameOver');
+    const restartBtn = document.getElementById('restartBtn');
+    const leftBtn = document.getElementById('leftBtn');
+    const rightBtn = document.getElementById('rightBtn');
+
+    const road = {
+      x: 70,
+      width: 220,
+      top: 0,
+      bottom: canvas.height
+    };
+
+    const lanes = [110, 180, 250];
+    const player = {
+      lane: 1,
+      y: 520,
+      width: 42,
+      height: 72,
+      color: '#38bdf8'
+    };
+
+    let obstacles = [];
+    let score = 0;
+    let best = Number(localStorage.getItem('slowRoadBest') || 0);
+    let gameRunning = true;
+    let lastSpawn = 0;
+    let spawnDelay = 1100;
+    let speed = 4.5;
+    let animationId;
+
+    bestEl.textContent = best;
+
+    function resetGame() {
+      obstacles = [];
+      score = 0;
+      gameRunning = true;
+      player.lane = 1;
+      lastSpawn = 0;
+      spawnDelay = 1100;
+      speed = 4.5;
+      gameOverEl.classList.add('hidden');
+      updateHud();
+    }
+
+    function updateHud() {
+      scoreEl.textContent = score;
+      bestEl.textContent = best;
+    }
+
+    function movePlayer(direction) {
+      if (!gameRunning) return;
+      if (direction === 'left' && player.lane > 0) player.lane -= 1;
+      if (direction === 'right' && player.lane < 2) player.lane += 1;
+    }
+
+    function createObstacle() {
+      const lane = Math.floor(Math.random() * lanes.length);
+      const colors = ['#fb7185', '#f59e0b', '#f97316', '#a78bfa', '#34d399'];
+
+      obstacles.push({
+        lane,
+        x: lanes[lane],
+        y: -90,
+        width: 42,
+        height: 72,
+        color: colors[Math.floor(Math.random() * colors.length)]
+      });
+    }
+
+    function detectCollision(a, b) {
+      return (
+        a.x < b.x + b.width &&
+        a.x + a.width > b.x &&
+        a.y < b.y + b.height &&
+        a.y + a.height > b.y
+      );
+    }
+
+    function endGame() {
+      gameRunning = false;
+      if (score > best) {
+        best = score;
+        localStorage.setItem('slowRoadBest', String(best));
+      }
+      updateHud();
+      gameOverEl.classList.remove('hidden');
+    }
+
+    function drawRoad() {
+      ctx.fillStyle = '#1f2937';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      ctx.fillStyle = '#2f6f3d';
+      ctx.fillRect(0, 0, road.x, canvas.height);
+      ctx.fillRect(road.x + road.width, 0, canvas.width - (road.x + road.width), canvas.height);
+
+      ctx.fillStyle = '#e5e7eb';
+      ctx.fillRect(road.x, 0, road.width, canvas.height);
+
+      ctx.strokeStyle = '#f8fafc';
+      ctx.lineWidth = 4;
+      ctx.setLineDash([20, 22]);
+      ctx.beginPath();
+      ctx.moveTo(road.x + road.width / 3, 0);
+      ctx.lineTo(road.x + road.width / 3, canvas.height);
+      ctx.moveTo(road.x + (2 * road.width) / 3, 0);
+      ctx.lineTo(road.x + (2 * road.width) / 3, canvas.height);
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
+
+    function drawCar(x, y, width, height, color) {
+      ctx.fillStyle = color;
+      ctx.fillRect(x - width / 2, y - height / 2, width, height);
+
+      ctx.fillStyle = '#111827';
+      ctx.fillRect(x - width / 2 + 8, y - height / 2 + 10, width - 16, height - 20);
+
+      ctx.fillStyle = '#fef3c7';
+      ctx.fillRect(x - width / 2 + 7, y - height / 2 + 2, 8, 12);
+      ctx.fillRect(x + width / 2 - 15, y - height / 2 + 2, 8, 12);
+      ctx.fillRect(x - width / 2 + 7, y + height / 2 - 14, 8, 12);
+      ctx.fillRect(x + width / 2 - 15, y + height / 2 - 14, 8, 12);
+    }
+
+    function draw() {
+      drawRoad();
+
+      const playerX = lanes[player.lane];
+      drawCar(playerX, player.y, player.width, player.height, player.color);
+
+      obstacles.forEach((car) => {
+        drawCar(car.x, car.y, car.width, car.height, car.color);
+      });
+    }
+
+    function update(timestamp) {
+      if (!gameRunning) {
+        draw();
+        return;
+      }
+
+      const delta = timestamp - lastSpawn;
+      if (delta > spawnDelay) {
+        createObstacle();
+        lastSpawn = timestamp;
+      }
+
+      obstacles.forEach((car) => {
+        car.y += speed;
+      });
+
+      score += 0.15;
+      if (Math.floor(score) > score) {
+        // keep integer score in HUD only
+      }
+
+      score = Math.floor(score);
+      updateHud();
+
+      if (score > 0 && score % 120 === 0) {
+        speed += 0.25;
+        spawnDelay = Math.max(500, spawnDelay - 40);
+      }
+
+      obstacles.forEach((car) => {
+        const playerBox = {
+          x: lanes[player.lane] - player.width / 2,
+          y: player.y - player.height / 2,
+          width: player.width,
+          height: player.height
+        };
+
+        const obstacleBox = {
+          x: car.x - car.width / 2,
+          y: car.y - car.height / 2,
+          width: car.width,
+          height: car.height
+        };
+
+        if (detectCollision(playerBox, obstacleBox)) {
+          endGame();
+        }
+      });
+
+      obstacles = obstacles.filter((car) => car.y < canvas.height + 100);
+      draw();
+      animationId = requestAnimationFrame(update);
+    }
+
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'ArrowLeft' || event.key.toLowerCase() === 'a') movePlayer('left');
+      if (event.key === 'ArrowRight' || event.key.toLowerCase() === 'd') movePlayer('right');
+    });
+
+    leftBtn.addEventListener('click', () => movePlayer('left'));
+    rightBtn.addEventListener('click', () => movePlayer('right'));
+    restartBtn.addEventListener('click', () => {
+      cancelAnimationFrame(animationId);
+      resetGame();
+      animationId = requestAnimationFrame(update);
+    });
+
+    resetGame();
+    animationId = requestAnimationFrame(update);
+  </script>
+</body>
+</html>
